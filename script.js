@@ -1,18 +1,18 @@
 (() => {
   "use strict";
 
-  const canvas = document.getElementById("lily");
+  const canvas = document.getElementById("clavel");
   const hint = document.getElementById("hint");
   const errorMessage = document.getElementById("error");
   const ctx = canvas.getContext("2d", { alpha: true });
 
   const LETTERS = "LudmiLUDMI";
 
-  const CROP = { sx: 80, sy: 20, sw: 354, sh: 450 };
+  const CROP = { sx: 10, sy: 0, sw: 768, sh: 1238 };
 
   const CONFIG = {
-    desktopColumns: 74,
-    mobileColumns: 52,
+    desktopColumns: 114,
+    mobileColumns: 84,
     smoothing: 0.12
   };
 
@@ -31,9 +31,9 @@
   }
 
   function setCanvasResolution() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
     const rect = canvas.getBoundingClientRect();
-    const w = rect.width || Math.min(window.innerWidth * 0.92, 420);
+    const w = rect.width || Math.min(window.innerWidth * 0.92, 430);
     const h = rect.height || (w / (CROP.sw / CROP.sh));
 
     canvas.width = Math.round(w * dpr);
@@ -52,7 +52,7 @@
   function makeAsciiFlower() {
     try {
       if (!source.naturalWidth || !source.naturalHeight) {
-        showError("No se pudo cargar la imagen del lirio.");
+        showError("No se pudo cargar la imagen del clavel.");
         return;
       }
 
@@ -88,9 +88,9 @@
           const blue = pixels[index + 2];
           const brightness = (red * 0.299 + green * 0.587 + blue * 0.114) / 255;
 
-          if (alpha < 0.15 || brightness < 0.05) continue;
+          if (alpha < 0.10 || brightness < 0.035) continue;
 
-          const boost = 1.14;
+          const boost = 1.18;
           const r = Math.min(255, Math.round(red * boost));
           const g = Math.min(255, Math.round(green * boost));
           const b = Math.min(255, Math.round(blue * boost));
@@ -126,10 +126,10 @@
   function prepareText() {
     const cellWidth = canvas.width / columns;
     const cellHeight = canvas.height / rows;
-    const fontSize = cellHeight * 0.90;
+    const fontSize = cellHeight * 0.92;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.font = `700 ${fontSize}px -apple-system-ui-monospace, "SF Mono", Menlo, Monaco, "Courier New", monospace`;
+    ctx.font = `600 ${fontSize}px -apple-system-ui-monospace, "SF Mono", Menlo, Monaco, "Courier New", monospace`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
@@ -144,10 +144,6 @@
 
     const { cellWidth, cellHeight } = prepareText();
     const tick = Math.floor(now / 180);
-    const isMobile = window.innerWidth <= 600;
-
-    ctx.shadowColor = "rgba(244, 154, 193, 0.4)";
-    ctx.shadowBlur = isMobile ? 2.5 : 4.5;
 
     for (let i = 0; i < particles.length; i++) {
       const p = particles[i];
@@ -156,8 +152,8 @@
 
       const fade = Math.min(1, localProgress * 2.6);
       const shimmer = currentProgress >= 0.98
-        ? 0.88 + Math.sin(now / 950 + p.phase) * 0.12
-        : 0.75 + fade * 0.25;
+        ? 0.90 + Math.sin(now / 950 + p.phase) * 0.10
+        : 0.78 + fade * 0.22;
 
       const shift = Math.sin(tick * 0.35 + p.phase) > 0.72 ? 1 : 0;
       const letter = LETTERS[(p.baseIndex + shift) % LETTERS.length];
@@ -173,7 +169,6 @@
     }
 
     ctx.globalAlpha = 1;
-    ctx.shadowBlur = 0;
     animationId = requestAnimationFrame(render);
   }
 
@@ -269,9 +264,9 @@
 
   source.addEventListener("load", makeAsciiFlower);
   source.addEventListener("error", () => {
-    showError("No se pudo cargar lirio.png. Verificá que el archivo esté en la misma carpeta.");
+    showError("No se pudo cargar clavel.png. Verificá que el archivo esté en la misma carpeta.");
   });
-  source.src = "lirio.png";
+  source.src = "clavel.png";
 
   let resizeTimer;
   window.addEventListener("resize", () => {

@@ -37,11 +37,11 @@ html, body {
   overflow: hidden;
 }
 
-#lily {
+#clavel {
   display: block;
-  width: min(92vw, calc(70dvh * 0.786), 460px);
-  height: min(calc(92vw / 0.786), 70dvh, 585px);
-  aspect-ratio: 354 / 450;
+  width: min(92vw, calc(74dvh * 0.6204), 430px);
+  height: min(calc(92vw / 0.6204), 74dvh, 690px);
+  aspect-ratio: 768 / 1238;
   touch-action: none;
 }
 
