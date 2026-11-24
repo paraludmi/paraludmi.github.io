@@ -1,15 +1,28 @@
 (() => {
   "use strict";
 
+  const TARGET_DATE = new Date("2026-11-25T00:30:00-03:00");
+  const isPreview = new URLSearchParams(window.location.search).has("preview") || new URLSearchParams(window.location.search).has("test");
+
+  const countdownScreen = document.getElementById("countdownScreen");
+  const cdDays = document.getElementById("cdDays");
+  const cdHours = document.getElementById("cdHours");
+  const cdMinutes = document.getElementById("cdMinutes");
+  const cdSeconds = document.getElementById("cdSeconds");
+  const unitDays = document.getElementById("unitDays");
+  const sepDays = document.getElementById("sepDays");
+
+  const scene = document.getElementById("scene");
   const canvas = document.getElementById("clavel");
   const hint = document.getElementById("hint");
+  const hintMore = document.getElementById("hintMore");
+  const letter = document.getElementById("letter");
+  const letterContent = document.getElementById("letterContent");
   const errorMessage = document.getElementById("error");
   const ctx = canvas.getContext("2d", { alpha: true });
 
   const LETTERS = "LudmiLUDMI";
-
   const CROP = { sx: 10, sy: 0, sw: 768, sh: 1238 };
-
   const CONFIG = {
     desktopColumns: 114,
     mobileColumns: 84,
@@ -24,6 +37,64 @@
 
   let targetProgress = 0;
   let currentProgress = 0;
+  let countdownInterval = 0;
+  let isUnlocked = false;
+
+  function pad(n) {
+    return n < 10 ? "0" + n : String(n);
+  }
+
+  function updateCountdown() {
+    const now = Date.now();
+    const diff = TARGET_DATE.getTime() - now;
+
+    if (diff <= 0 || isPreview) {
+      unlockPage();
+      return;
+    }
+
+    const totalSeconds = Math.floor(diff / 1000);
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    if (days <= 0) {
+      if (unitDays) unitDays.style.display = "none";
+      if (sepDays) sepDays.style.display = "none";
+    } else {
+      if (unitDays) unitDays.style.display = "flex";
+      if (sepDays) sepDays.style.display = "inline";
+      if (cdDays) cdDays.textContent = pad(days);
+    }
+
+    if (cdHours) cdHours.textContent = pad(hours);
+    if (cdMinutes) cdMinutes.textContent = pad(minutes);
+    if (cdSeconds) cdSeconds.textContent = pad(seconds);
+  }
+
+  function unlockPage() {
+    if (isUnlocked) return;
+    isUnlocked = true;
+    if (countdownInterval) clearInterval(countdownInterval);
+
+    if (countdownScreen) {
+      countdownScreen.classList.add("is-unlocked");
+      setTimeout(() => {
+        countdownScreen.remove();
+      }, 900);
+    }
+
+    if (scene) {
+      scene.classList.remove("is-locked");
+    }
+
+    if (source.complete && source.naturalWidth) {
+      makeAsciiFlower();
+    } else {
+      source.src = "clavel.png";
+    }
+  }
 
   function hash(x, y) {
     const value = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
@@ -41,11 +112,19 @@
   }
 
   function updateHint() {
-    if (!hint) return;
-    if (targetProgress > 0.05) {
-      hint.classList.add("is-hidden");
-    } else {
-      hint.classList.remove("is-hidden");
+    if (hint) {
+      if (targetProgress > 0.05) {
+        hint.classList.add("is-hidden");
+      } else {
+        hint.classList.remove("is-hidden");
+      }
+    }
+    if (hintMore) {
+      if (targetProgress >= 0.95 && targetProgress <= 1.15) {
+        hintMore.classList.remove("is-hidden");
+      } else {
+        hintMore.classList.add("is-hidden");
+      }
     }
   }
 
@@ -144,31 +223,60 @@
 
     const { cellWidth, cellHeight } = prepareText();
     const tick = Math.floor(now / 180);
+    const bloomProgress = Math.min(1, currentProgress);
 
     for (let i = 0; i < particles.length; i++) {
       const p = particles[i];
-      const localProgress = (currentProgress - p.delay) / Math.max(0.05, 1 - p.delay);
+      const localProgress = (bloomProgress - p.delay) / Math.max(0.05, 1 - p.delay);
       if (localProgress <= 0) continue;
 
       const fade = Math.min(1, localProgress * 2.6);
-      const shimmer = currentProgress >= 0.98
+      const shimmer = bloomProgress >= 0.98
         ? 0.90 + Math.sin(now / 950 + p.phase) * 0.10
         : 0.78 + fade * 0.22;
 
       const shift = Math.sin(tick * 0.35 + p.phase) > 0.72 ? 1 : 0;
-      const letter = LETTERS[(p.baseIndex + shift) % LETTERS.length];
+      const letterChar = LETTERS[(p.baseIndex + shift) % LETTERS.length];
 
       ctx.globalAlpha = Math.min(1, p.alpha * fade * shimmer);
       ctx.fillStyle = p.color;
 
       ctx.fillText(
-        letter,
+        letterChar,
         (p.x + 0.5) * cellWidth,
         (p.y + 0.5) * cellHeight
       );
     }
 
     ctx.globalAlpha = 1;
+
+    if (currentProgress > 1) {
+      const p2 = Math.min(1, Math.max(0, currentProgress - 1));
+      if (letter) {
+        letter.style.visibility = "visible";
+        letter.style.opacity = String(p2);
+        letter.style.transform = `translateY(${(1 - p2) * 36}px)`;
+        letter.style.pointerEvents = p2 > 0.85 ? "auto" : "none";
+      }
+      if (canvas) {
+        const scale = 1 - 0.12 * p2;
+        const transY = -24 * p2;
+        const opacity = 1 - 0.78 * p2;
+        canvas.style.transform = `scale(${scale}) translateY(${transY}px)`;
+        canvas.style.opacity = String(opacity);
+      }
+    } else {
+      if (letter) {
+        letter.style.visibility = "hidden";
+        letter.style.opacity = "0";
+        letter.style.pointerEvents = "none";
+      }
+      if (canvas) {
+        canvas.style.transform = "none";
+        canvas.style.opacity = "1";
+      }
+    }
+
     animationId = requestAnimationFrame(render);
   }
 
@@ -184,6 +292,7 @@
   let touchStartTime = 0;
   let isTouching = false;
   let isDragging = false;
+  let letterScrollStart = 0;
 
   window.addEventListener("touchstart", (e) => {
     if (e.touches.length !== 1) return;
@@ -193,6 +302,7 @@
     touchStartY = e.touches[0].clientY;
     touchStartProgress = targetProgress;
     touchStartTime = performance.now();
+    letterScrollStart = letterContent ? letterContent.scrollTop : 0;
   }, { passive: true });
 
   window.addEventListener("touchmove", (e) => {
@@ -206,8 +316,20 @@
       isDragging = true;
     }
 
-    const travel = Math.max(200, window.innerHeight * 0.42);
-    targetProgress = Math.min(1, Math.max(0, touchStartProgress + deltaY / travel));
+    if (targetProgress >= 1.5 && letterContent && letterContent.contains(e.target)) {
+      if (deltaY > 0) {
+        return;
+      }
+      if (deltaY < 0 && letterScrollStart <= 2) {
+        const travel = Math.max(160, window.innerHeight * 0.35);
+        targetProgress = Math.min(2, Math.max(0, 2 + deltaY / travel));
+        updateHint();
+      }
+      return;
+    }
+
+    const travel = Math.max(200, window.innerHeight * 0.40);
+    targetProgress = Math.min(2, Math.max(0, touchStartProgress + deltaY / travel));
     updateHint();
   }, { passive: true });
 
@@ -215,8 +337,22 @@
     if (!isTouching) return;
     const duration = performance.now() - touchStartTime;
 
-    if (!isDragging && duration < 280) {
-      targetProgress = targetProgress > 0.5 ? 0 : 1;
+    if (isDragging) {
+      if (targetProgress > 1 && targetProgress < 1.7) {
+        targetProgress = 1;
+        updateHint();
+      } else if (targetProgress >= 1.7) {
+        targetProgress = 2;
+        updateHint();
+      }
+    } else if (duration < 280) {
+      if (targetProgress < 0.6) {
+        targetProgress = 1;
+      } else if (targetProgress < 1.4) {
+        targetProgress = 2;
+      } else {
+        targetProgress = 1;
+      }
       updateHint();
     }
 
@@ -225,8 +361,15 @@
   }, { passive: true });
 
   window.addEventListener("wheel", (e) => {
-    targetProgress = Math.min(1, Math.max(0, targetProgress + e.deltaY * 0.0012));
-    updateHint();
+    if (targetProgress >= 1.5 && letterContent && letterContent.contains(e.target)) {
+      if (e.deltaY < 0 && letterContent.scrollTop <= 2) {
+        targetProgress = Math.min(2, Math.max(0, targetProgress + e.deltaY * 0.0015));
+        updateHint();
+      }
+    } else {
+      targetProgress = Math.min(2, Math.max(0, targetProgress + e.deltaY * 0.0012));
+      updateHint();
+    }
   }, { passive: true });
 
   let isMouseDown = false;
@@ -242,35 +385,88 @@
     mouseStartY = e.clientY;
     mouseStartProgress = targetProgress;
     mouseStartTime = performance.now();
+    letterScrollStart = letterContent ? letterContent.scrollTop : 0;
   });
 
   window.addEventListener("mousemove", (e) => {
     if (!isMouseDown) return;
     const deltaY = mouseStartY - e.clientY;
     if (Math.abs(deltaY) > 5) mouseMoved = true;
+
+    if (targetProgress >= 1.5 && letterContent && letterContent.contains(e.target)) {
+      if (deltaY > 0) return;
+      if (deltaY < 0 && letterScrollStart <= 2) {
+        const travel = Math.max(160, window.innerHeight * 0.35);
+        targetProgress = Math.min(2, Math.max(0, 2 + deltaY / travel));
+        updateHint();
+      }
+      return;
+    }
+
     const travel = Math.max(200, window.innerHeight * 0.45);
-    targetProgress = Math.min(1, Math.max(0, mouseStartProgress + deltaY / travel));
+    targetProgress = Math.min(2, Math.max(0, mouseStartProgress + deltaY / travel));
     updateHint();
   });
 
   window.addEventListener("mouseup", () => {
     if (!isMouseDown) return;
-    if (!mouseMoved && performance.now() - mouseStartTime < 280) {
-      targetProgress = targetProgress > 0.5 ? 0 : 1;
+    if (mouseMoved) {
+      if (targetProgress > 1 && targetProgress < 1.7) {
+        targetProgress = 1;
+        updateHint();
+      } else if (targetProgress >= 1.7) {
+        targetProgress = 2;
+        updateHint();
+      }
+    } else if (performance.now() - mouseStartTime < 280) {
+      if (targetProgress < 0.6) {
+        targetProgress = 1;
+      } else if (targetProgress < 1.4) {
+        targetProgress = 2;
+      } else {
+        targetProgress = 1;
+      }
       updateHint();
     }
     isMouseDown = false;
   });
 
+  if (hint) {
+    hint.addEventListener("click", () => {
+      targetProgress = 1;
+      updateHint();
+    });
+  }
+
+  if (hintMore) {
+    hintMore.addEventListener("click", () => {
+      targetProgress = 2;
+      updateHint();
+    });
+  }
+
+  if (letter) {
+    letter.addEventListener("click", (e) => {
+      if (e.target === letter) {
+        targetProgress = 1;
+        updateHint();
+      }
+    });
+  }
+
   source.addEventListener("load", makeAsciiFlower);
   source.addEventListener("error", () => {
     showError("No se pudo cargar clavel.png. Verificá que el archivo esté en la misma carpeta.");
   });
-  source.src = "clavel.png";
 
   let resizeTimer;
   window.addEventListener("resize", () => {
     window.clearTimeout(resizeTimer);
     resizeTimer = window.setTimeout(makeAsciiFlower, 150);
   });
+
+  updateCountdown();
+  if (!isUnlocked) {
+    countdownInterval = setInterval(updateCountdown, 1000);
+  }
 })();

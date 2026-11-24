@@ -11,13 +11,57 @@
   <script src="script.js" defer></script>
 </head>
 <body>
-  <main class="scene">
+  <div class="countdown-screen" id="countdownScreen">
+    <div class="countdown-box">
+      <h1 class="countdown-title">Para Ludmi</h1>
+      <p class="countdown-subtitle">Disponible en</p>
+      <div class="countdown-timer" id="countdownTimer" aria-live="polite">
+        <div class="countdown-unit" id="unitDays">
+          <span class="countdown-num" id="cdDays">00</span>
+          <span class="countdown-label">días</span>
+        </div>
+        <span class="countdown-sep" id="sepDays">:</span>
+        <div class="countdown-unit">
+          <span class="countdown-num" id="cdHours">00</span>
+          <span class="countdown-label">horas</span>
+        </div>
+        <span class="countdown-sep">:</span>
+        <div class="countdown-unit">
+          <span class="countdown-num" id="cdMinutes">00</span>
+          <span class="countdown-label">min</span>
+        </div>
+        <span class="countdown-sep">:</span>
+        <div class="countdown-unit">
+          <span class="countdown-num" id="cdSeconds">00</span>
+          <span class="countdown-label">seg</span>
+        </div>
+      </div>
+      <p class="countdown-note">esperá a que el tiempo llegue a cero</p>
+    </div>
+  </div>
+
+  <main class="scene is-locked" id="scene">
     <canvas id="clavel" aria-label="Clavel formado por las letras Ludmi"></canvas>
 
     <div class="hint" id="hint">
       <span class="hint-arrow" aria-hidden="true">↑</span>
       <span class="hint-text">(scrollea despacio)</span>
     </div>
+
+    <div class="hint is-hidden" id="hintMore">
+      <span class="hint-arrow" aria-hidden="true">↑</span>
+      <span class="hint-text">(seguí scrolleando)</span>
+    </div>
+
+    <article class="letter" id="letter" aria-live="polite">
+      <div class="letter-content" id="letterContent">
+        <p>El que haya elegido los claveles tiene un motivo (capaz medio mogul pq el significado lo saqué de un post ig que vi hace meses JAJIQJQ). Representan la admiración y la fuerza, que es exactamente lo que siento cuando pienso en vos.</p>
+        <p>Admiro cómo tratas a la gente, tu forma de ser positiva y de no quedarte con la primera impresión ni con las acciones de los demás. Me gusta tu energía. Con lo que hemos hablado, me demostraste tener una bondad que destaca sin  tanto esfuerzo, sobre todo en el pais dw mierda donde falta tanto eso que vos tenés.</p>
+        <p>Sé que estás pasando por una etapa complicada de tu vida, estás lejos de tu casa, cargas con cosas que no te corresponden del todo y te terminan abrumando, sumado a un futuro todavía no definido. Pero me gustaría que sepas que no tenés que llevar todo eso sola (aunque espero que ya lo sepas). Yo quiero poder estar para vos, para escucharte, para acompañarte y para recordarte que valés mucho más de lo que a veces te puedan hacer sentir los demás.</p>
+        <p>Y por si no es evidente con esto y con mi obvio nerviosismo y forma medio autista de actuar cuando interactúo con vos, me gustás (aunque no te quedes solo con esto, porque me gustaría decírtelo en persona la proxima vez si no me gana la vergüenza). Y aunque a mi parecer todavía no nos conocemos tan bien como me gustaría, quiero que sepas que podés contar conmigo, SIEMPRE. Incluso en el caso de que yo no te gustase</p>
+        <p>Ah y perdon que el dibujo en si no es como el tik tok, no me dio la capacidad mental. No se si te diste cuenta, pero las flores estan hechas en base a tu apodo, a veces me olvido que te llamas Ludmila porque todos te decimos lula, asi que me quise hacer el diferente diciendote ludmi.</p>
+      </div>
+    </article>
 
     <p id="error" class="error" hidden></p>
   </main>
